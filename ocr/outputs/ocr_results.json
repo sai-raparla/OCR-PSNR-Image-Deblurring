@@ -1,0 +1,416 @@
+[
+  {
+    "image_id": "0009059",
+    "cer": 0.7566765578635015,
+    "wer": 0.9821428571428571,
+    "conf_orig": 88.33928571428571,
+    "conf_blur": 23.305555555555557,
+    "orig_text_len": 337,
+    "blur_text_len": 160
+  },
+  {
+    "image_id": "0009060",
+    "cer": 0.9920634920634921,
+    "wer": 1.0,
+    "conf_orig": 64.8974358974359,
+    "conf_blur": 32.0,
+    "orig_text_len": 252,
+    "blur_text_len": 2
+  },
+  {
+    "image_id": "0009061",
+    "cer": 0.6206896551724138,
+    "wer": 0.9696969696969697,
+    "conf_orig": 87.92307692307692,
+    "conf_blur": 33.44736842105263,
+    "orig_text_len": 377,
+    "blur_text_len": 257
+  },
+  {
+    "image_id": "0009062",
+    "cer": 0.009950248756218905,
+    "wer": 0.058823529411764705,
+    "conf_orig": 93.91176470588235,
+    "conf_blur": 91.1470588235294,
+    "orig_text_len": 201,
+    "blur_text_len": 201
+  },
+  {
+    "image_id": "0009063",
+    "cer": 0.5106837606837606,
+    "wer": 0.8961038961038961,
+    "conf_orig": 88.76,
+    "conf_blur": 43.094339622641506,
+    "orig_text_len": 468,
+    "blur_text_len": 373
+  },
+  {
+    "image_id": "0009064",
+    "cer": 0.9696969696969697,
+    "wer": 0.9906542056074766,
+    "conf_orig": 84.81308411214954,
+    "conf_blur": 33.8,
+    "orig_text_len": 627,
+    "blur_text_len": 19
+  },
+  {
+    "image_id": "0009065",
+    "cer": 0.49279538904899134,
+    "wer": 0.9454545454545454,
+    "conf_orig": 79.13207547169812,
+    "conf_blur": 38.05,
+    "orig_text_len": 347,
+    "blur_text_len": 267
+  },
+  {
+    "image_id": "0009066",
+    "cer": 0.8092307692307692,
+    "wer": 1.0,
+    "conf_orig": 89.01694915254237,
+    "conf_blur": 32.4,
+    "orig_text_len": 325,
+    "blur_text_len": 93
+  },
+  {
+    "image_id": "0009069",
+    "cer": 0.025,
+    "wer": 0.10344827586206896,
+    "conf_orig": 83.27586206896552,
+    "conf_blur": 81.51724137931035,
+    "orig_text_len": 120,
+    "blur_text_len": 120
+  },
+  {
+    "image_id": "0010952",
+    "cer": 0.8221343873517787,
+    "wer": 1.0,
+    "conf_orig": 91.23809523809524,
+    "conf_blur": 33.53846153846154,
+    "orig_text_len": 253,
+    "blur_text_len": 59
+  },
+  {
+    "image_id": "0010953",
+    "cer": 0.7668161434977578,
+    "wer": 0.9888888888888889,
+    "conf_orig": 63.642857142857146,
+    "conf_blur": 35.763636363636365,
+    "orig_text_len": 446,
+    "blur_text_len": 258
+  },
+  {
+    "image_id": "0010954",
+    "cer": 0.21495327102803738,
+    "wer": 0.4186046511627907,
+    "conf_orig": 78.26829268292683,
+    "conf_blur": 62.476190476190474,
+    "orig_text_len": 214,
+    "blur_text_len": 191
+  },
+  {
+    "image_id": "0010956",
+    "cer": 0.6853932584269663,
+    "wer": 0.9574468085106383,
+    "conf_orig": 91.40425531914893,
+    "conf_blur": 34.08695652173913,
+    "orig_text_len": 267,
+    "blur_text_len": 140
+  },
+  {
+    "image_id": "0014623",
+    "cer": 0.3875432525951557,
+    "wer": 0.7358490566037735,
+    "conf_orig": 77.13725490196079,
+    "conf_blur": 54.702127659574465,
+    "orig_text_len": 289,
+    "blur_text_len": 252
+  },
+  {
+    "image_id": "0014624",
+    "cer": 0.016129032258064516,
+    "wer": 0.1111111111111111,
+    "conf_orig": 91.73076923076923,
+    "conf_blur": 90.42307692307692,
+    "orig_text_len": 186,
+    "blur_text_len": 185
+  },
+  {
+    "image_id": "0014625",
+    "cer": 0.5011185682326622,
+    "wer": 1.0,
+    "conf_orig": 91.25974025974025,
+    "conf_blur": 35.557377049180324,
+    "orig_text_len": 447,
+    "blur_text_len": 406
+  },
+  {
+    "image_id": "0014626",
+    "cer": 0.7037037037037037,
+    "wer": 1.0,
+    "conf_orig": 86.5,
+    "conf_blur": 21.09090909090909,
+    "orig_text_len": 135,
+    "blur_text_len": 74
+  },
+  {
+    "image_id": "0014627",
+    "cer": 0.9229122055674518,
+    "wer": 0.9876543209876543,
+    "conf_orig": 85.51948051948052,
+    "conf_blur": 28.0,
+    "orig_text_len": 467,
+    "blur_text_len": 50
+  },
+  {
+    "image_id": "0014628",
+    "cer": 0.993103448275862,
+    "wer": 1.0,
+    "conf_orig": 45.0,
+    "conf_blur": 37.0,
+    "orig_text_len": 145,
+    "blur_text_len": 2
+  },
+  {
+    "image_id": "0014629",
+    "cer": 0.03940886699507389,
+    "wer": 0.20588235294117646,
+    "conf_orig": 90.9090909090909,
+    "conf_blur": 82.65625,
+    "orig_text_len": 203,
+    "blur_text_len": 201
+  },
+  {
+    "image_id": "0014630",
+    "cer": 0.25630252100840334,
+    "wer": 0.7380952380952381,
+    "conf_orig": 88.29268292682927,
+    "conf_blur": 53.9,
+    "orig_text_len": 238,
+    "blur_text_len": 223
+  },
+  {
+    "image_id": "0014631",
+    "cer": 0.9584775086505191,
+    "wer": 0.9807692307692307,
+    "conf_orig": 88.4423076923077,
+    "conf_blur": 37.25,
+    "orig_text_len": 289,
+    "blur_text_len": 16
+  },
+  {
+    "image_id": "0014632",
+    "cer": 1.0,
+    "wer": 1.0,
+    "conf_orig": 0.0,
+    "conf_blur": 16.470588235294116,
+    "orig_text_len": 0,
+    "blur_text_len": 68
+  },
+  {
+    "image_id": "0014633",
+    "cer": 1.0,
+    "wer": 1.0,
+    "conf_orig": 84.61111111111111,
+    "conf_blur": 0.0,
+    "orig_text_len": 102,
+    "blur_text_len": 0
+  },
+  {
+    "image_id": "0014634",
+    "cer": 0.8888888888888888,
+    "wer": 0.9859154929577465,
+    "conf_orig": 90.30985915492958,
+    "conf_blur": 30.25,
+    "orig_text_len": 432,
+    "blur_text_len": 81
+  },
+  {
+    "image_id": "0014635",
+    "cer": 0.9730769230769231,
+    "wer": 1.0,
+    "conf_orig": 77.78888888888889,
+    "conf_blur": 26.25,
+    "orig_text_len": 520,
+    "blur_text_len": 17
+  },
+  {
+    "image_id": "0014636",
+    "cer": 0.7155425219941349,
+    "wer": 0.984375,
+    "conf_orig": 92.015625,
+    "conf_blur": 29.2,
+    "orig_text_len": 341,
+    "blur_text_len": 218
+  },
+  {
+    "image_id": "0014637",
+    "cer": 0.32167832167832167,
+    "wer": 0.7142857142857143,
+    "conf_orig": 90.65454545454546,
+    "conf_blur": 50.73626373626374,
+    "orig_text_len": 572,
+    "blur_text_len": 557
+  },
+  {
+    "image_id": "0014638",
+    "cer": 0.09482758620689655,
+    "wer": 0.38461538461538464,
+    "conf_orig": 90.25641025641026,
+    "conf_blur": 69.27777777777777,
+    "orig_text_len": 232,
+    "blur_text_len": 222
+  },
+  {
+    "image_id": "0018784",
+    "cer": 1.0,
+    "wer": 1.0,
+    "conf_orig": 60.857142857142854,
+    "conf_blur": 0.0,
+    "orig_text_len": 105,
+    "blur_text_len": 0
+  },
+  {
+    "image_id": "0018785",
+    "cer": 0.4074074074074074,
+    "wer": 0.8333333333333334,
+    "conf_orig": 84.45238095238095,
+    "conf_blur": 45.93103448275862,
+    "orig_text_len": 189,
+    "blur_text_len": 194
+  },
+  {
+    "image_id": "0018786",
+    "cer": 0.020833333333333332,
+    "wer": 0.1111111111111111,
+    "conf_orig": 86.5,
+    "conf_blur": 83.625,
+    "orig_text_len": 48,
+    "blur_text_len": 48
+  },
+  {
+    "image_id": "0018787",
+    "cer": 0.7333333333333333,
+    "wer": 1.0,
+    "conf_orig": 82.67241379310344,
+    "conf_blur": 31.71875,
+    "orig_text_len": 345,
+    "blur_text_len": 197
+  },
+  {
+    "image_id": "0018788",
+    "cer": 0.7755102040816326,
+    "wer": 1.0,
+    "conf_orig": 90.29508196721312,
+    "conf_blur": 23.666666666666668,
+    "orig_text_len": 343,
+    "blur_text_len": 145
+  },
+  {
+    "image_id": "0018789",
+    "cer": 0.0449438202247191,
+    "wer": 0.23076923076923078,
+    "conf_orig": 79.66666666666667,
+    "conf_blur": 73.0,
+    "orig_text_len": 89,
+    "blur_text_len": 87
+  },
+  {
+    "image_id": "0018790",
+    "cer": 0.972972972972973,
+    "wer": 1.0,
+    "conf_orig": 70.375,
+    "conf_blur": 9.0,
+    "orig_text_len": 37,
+    "blur_text_len": 1
+  },
+  {
+    "image_id": "0018791",
+    "cer": 0.5835777126099707,
+    "wer": 1.0,
+    "conf_orig": 83.28571428571429,
+    "conf_blur": 31.653846153846153,
+    "orig_text_len": 341,
+    "blur_text_len": 278
+  },
+  {
+    "image_id": "0018792",
+    "cer": 0.7877813504823151,
+    "wer": 1.0,
+    "conf_orig": 82.57142857142857,
+    "conf_blur": 28.80952380952381,
+    "orig_text_len": 311,
+    "blur_text_len": 217
+  },
+  {
+    "image_id": "0018793",
+    "cer": 0.14470284237726097,
+    "wer": 0.2328767123287671,
+    "conf_orig": 85.32857142857142,
+    "conf_blur": 86.3225806451613,
+    "orig_text_len": 387,
+    "blur_text_len": 348
+  },
+  {
+    "image_id": "0018794",
+    "cer": 0.4101123595505618,
+    "wer": 0.6153846153846154,
+    "conf_orig": 87.0,
+    "conf_blur": 71.56666666666666,
+    "orig_text_len": 178,
+    "blur_text_len": 240
+  },
+  {
+    "image_id": "0018795",
+    "cer": 0.967654986522911,
+    "wer": 1.0,
+    "conf_orig": 88.78,
+    "conf_blur": 12.5,
+    "orig_text_len": 371,
+    "blur_text_len": 13
+  },
+  {
+    "image_id": "0018796",
+    "cer": 0.5130434782608696,
+    "wer": 0.9333333333333333,
+    "conf_orig": 89.53333333333333,
+    "conf_blur": 37.0,
+    "orig_text_len": 345,
+    "blur_text_len": 353
+  },
+  {
+    "image_id": "0018797",
+    "cer": 0.6369426751592356,
+    "wer": 0.9836065573770492,
+    "conf_orig": 84.05,
+    "conf_blur": 40.94444444444444,
+    "orig_text_len": 314,
+    "blur_text_len": 260
+  },
+  {
+    "image_id": "0018798",
+    "cer": 0.2894736842105263,
+    "wer": 0.3793103448275862,
+    "conf_orig": 88.44827586206897,
+    "conf_blur": 73.05882352941177,
+    "orig_text_len": 152,
+    "blur_text_len": 184
+  },
+  {
+    "image_id": "0018799",
+    "cer": 0.05504587155963303,
+    "wer": 0.17647058823529413,
+    "conf_orig": 95.3125,
+    "conf_blur": 86.77777777777777,
+    "orig_text_len": 109,
+    "blur_text_len": 110
+  },
+  {
+    "image_id": "0018800",
+    "cer": 0.7405660377358491,
+    "wer": 0.9859154929577465,
+    "conf_orig": 91.3943661971831,
+    "conf_blur": 22.625,
+    "orig_text_len": 424,
+    "blur_text_len": 256
+  }
+]
