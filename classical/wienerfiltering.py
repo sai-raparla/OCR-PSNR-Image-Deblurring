@@ -4,123 +4,137 @@ import re
 import numpy as np
 from PIL import Image
 
+def get_num(name):
+    m = re.match(r"(\d+)", name)
+    if m:
+        return m.group(1)
+    else:
+        return None
 
-def extract_image_id(filename):
-    match = re.match(r"(\d+)", filename)
-    if match:
-        return match.group(1)
-    return None
-
-
-def load_grayscale_image(path):
+def open_pic(path):
     img = Image.open(path).convert("L")
-    arr = np.array(img, dtype=np.float32) / 255.0
+    arr = np.array(img).astype(np.float32)
+    arr = arr / 255.0
     return arr
 
-
-def save_grayscale_image(arr, path):
+def save_pic(arr, path):
     arr = np.clip(arr, 0.0, 1.0)
-    img = Image.fromarray((arr * 255).astype(np.uint8))
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    arr = arr * 255.0
+    arr = arr.astype(np.uint8)
+    img = Image.fromarray(arr)
+
+    folder = os.path.dirname(path)
+    if folder != "":
+        if os.path.exists(folder) == False:
+            os.makedirs(folder)
+
     img.save(path)
 
+def make_map(folder):
+    d = {}
+    files = os.listdir(folder)
 
-def psf_to_otf(psf, shape):
-    h, w = shape
-    ph, pw = psf.shape
+    for name in files:
+        low = name.lower()
+        if low.endswith(".png"):
+            num = get_num(name)
+            if num != None:
+                d[num] = name
 
-    padded = np.zeros((h, w), dtype=np.float32)
-    padded[:ph, :pw] = psf
+    return d
 
-    padded = np.roll(padded, -ph // 2, axis=0)
-    padded = np.roll(padded, -pw // 2, axis=1)
+def psf_to_big(psf, shape):
+    h = shape[0]
+    w = shape[1]
 
-    otf = np.fft.fft2(padded)
-    return otf
+    ph = psf.shape[0]
+    pw = psf.shape[1]
 
+    big = np.zeros((h, w), dtype=np.float32)
+    big[0:ph, 0:pw] = psf
 
-def wiener_deblur(blurred, psf, k=0.01):
-    psf_sum = psf.sum()
-    if psf_sum != 0:
-        psf = psf / psf_sum
+    big = np.roll(big, -(ph // 2), axis=0)
+    big = np.roll(big, -(pw // 2), axis=1)
 
-    G = np.fft.fft2(blurred)
-    H = psf_to_otf(psf, blurred.shape)
-    H_conj = np.conj(H)
+    return np.fft.fft2(big)
 
-    F_hat = (H_conj / (np.abs(H) ** 2 + k)) * G
-    restored = np.real(np.fft.ifft2(F_hat))
+def do_wiener(blur, psf, k):
+    s = psf.sum()
+    if s != 0:
+        psf = psf / s
 
-    restored = np.clip(restored, 0.0, 1.0)
-    return restored
+    g = np.fft.fft2(blur)
+    h = psf_to_big(psf, blur.shape)
 
+    top = np.conj(h)
+    bottom = (np.abs(h) ** 2) + k
 
-def build_file_map(folder):
-    file_map = {}
+    f = (top / bottom) * g
+    out = np.fft.ifft2(f)
+    out = np.real(out)
+    out = np.clip(out, 0.0, 1.0)
 
-    for filename in os.listdir(folder):
-        if filename.lower().endswith(".png"):
-            image_id = extract_image_id(filename)
-            if image_id is not None:
-                file_map[image_id] = filename
+    return out
 
-    return file_map
+def run_all(blur_dir, psf_dir, out_dir, limit=None, k=0.01):
+    blur_files = make_map(blur_dir)
+    psf_files = make_map(psf_dir)
 
+    nums = []
 
-def process_images(blur_dir, psf_dir, output_dir, limit=None, k=0.01):
-    blur_map = build_file_map(blur_dir)
-    psf_map = build_file_map(psf_dir)
+    for num in blur_files:
+        if num in psf_files:
+            nums.append(num)
 
-    common_ids = sorted(set(blur_map.keys()) & set(psf_map.keys()))
+    nums.sort()
 
-    if limit is not None:
-        common_ids = common_ids[:limit]
+    if limit != None:
+        nums = nums[:limit]
 
-    print(f"Found {len(common_ids)} matching blur/psf pairs")
+    print("Found", len(nums), "matching blur/psf pairs")
 
-    if len(common_ids) == 0:
-        print("No matching files found.")
+    if len(nums) == 0:
+        print("No matching files found")
         return
 
-    for i, image_id in enumerate(common_ids, start=1):
-        blur_name = blur_map[image_id]
-        psf_name = psf_map[image_id]
+    i = 0
+
+    while i < len(nums):
+        num = nums[i]
+
+        blur_name = blur_files[num]
+        psf_name = psf_files[num]
 
         blur_path = os.path.join(blur_dir, blur_name)
         psf_path = os.path.join(psf_dir, psf_name)
-        output_path = os.path.join(output_dir, blur_name)
+        out_path = os.path.join(out_dir, blur_name)
 
         try:
-            blurred = load_grayscale_image(blur_path)
-            psf = load_grayscale_image(psf_path)
+            blur = open_pic(blur_path)
+            psf = open_pic(psf_path)
 
-            restored = wiener_deblur(blurred, psf, k=k)
-            save_grayscale_image(restored, output_path)
+            out = do_wiener(blur, psf, k)
+            save_pic(out, out_path)
 
-            print(f"[{i}/{len(common_ids)}] saved {output_path}")
+            print("[", i + 1, "/", len(nums), "] saved", out_path)
 
         except Exception as e:
-            print(f"Skipping {blur_name}: {e}")
+            print("Skipping", blur_name)
+            print(e)
 
+        i = i + 1
 
 def main():
-    parser = argparse.ArgumentParser(description="Apply Wiener filtering to blurred images using PSF images")
-    parser.add_argument("--blur-dir", required=True, help="Folder with blurred images")
-    parser.add_argument("--psf-dir", required=True, help="Folder with PSF images")
-    parser.add_argument("--output-dir", required=True, help="Folder to save restored images")
-    parser.add_argument("--limit", type=int, default=None, help="Only process first N images")
-    parser.add_argument("--k", type=float, default=0.01, help="Wiener filter noise constant")
+    p = argparse.ArgumentParser()
+    p.add_argument("--blur-dir", required=True)
+    p.add_argument("--psf-dir", required=True)
+    p.add_argument("--output-dir", required=True)
+    p.add_argument("--limit", type=int, default=None)
+    p.add_argument("--k", type=float, default=0.01)
 
-    args = parser.parse_args()
+    a = p.parse_args()
 
-    process_images(
-        blur_dir=args.blur_dir,
-        psf_dir=args.psf_dir,
-        output_dir=args.output_dir,
-        limit=args.limit,
-        k=args.k,
-    )
-
+    run_all(a.blur_dir, a.psf_dir, a.output_dir, a.limit, a.k)
 
 if __name__ == "__main__":
     main()
