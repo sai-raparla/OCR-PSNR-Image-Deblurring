@@ -1,6 +1,6 @@
-# OCR-Image-Deblurring
+# OCR-PSNR-Image-Deblurring
 
-Deblurring text images to improve OCR accuracy using computer vision techniques.
+Deblurring text images to improve OCR and PSRN accuracy using computer vision techniques.
 
 Classical Wiener deconvolution is used as the baseline restoration method. The pipeline tunes the Wiener regularization constant `k` on a training subset, then evaluates the locked-in `k` on two held-out test sets: one for image-quality metrics (PSNR) and one for OCR metrics (CER, WER).
 
