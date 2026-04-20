@@ -1,183 +1,164 @@
 """
-Run Tesseract OCR on BMVC_image_data (blur vs orig) and visualize performance.
+Produce two comparison charts from a tesseract_eval.py CSV:
+  1. confidence_comparison.png  - OCR confidence on original vs blurred images
+  2. error_rates_comparison.png - CER and WER distributions on blurred images
 """
 
 import argparse
+import csv
 import os
-import json
-import time
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tesseract_eval import find_paired_images, run_ocr, character_error_rate, word_error_rate, extract_image_id
 
-
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "BMVC_image_data")
+DEFAULT_CSV = os.path.join(os.path.dirname(__file__), "outputs", "ocr_results_250.csv")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
 
 
-def run_evaluation(blur_dir, orig_dir, limit=None, psm=6):
-    pairs = find_paired_images(blur_dir, orig_dir)
-    if limit:
-        pairs = pairs[:limit]
-
-    total = len(pairs)
-    print(f"Found {total} matched blur/orig image pairs")
-    print(f"Tesseract PSM mode: {psm}")
-    print("-" * 60)
-
-    results = []
-    skipped = 0
-    t0 = time.time()
-
-    for i, (blur_fname, orig_fname) in enumerate(pairs):
-        try:
-            orig_result = run_ocr(os.path.join(orig_dir, orig_fname), psm)
-            blur_result = run_ocr(os.path.join(blur_dir, blur_fname), psm)
-        except Exception:
-            skipped += 1
-            continue
-
-        ref = orig_result["text"]
-        hyp = blur_result["text"]
-        cer = character_error_rate(ref, hyp)
-        wer = word_error_rate(ref, hyp)
-
-        results.append({
-            "image_id": extract_image_id(blur_fname),
-            "cer": cer,
-            "wer": wer,
-            "conf_orig": orig_result["avg_confidence"],
-            "conf_blur": blur_result["avg_confidence"],
-            "orig_text_len": len(ref),
-            "blur_text_len": len(hyp),
-        })
-
-        processed = len(results) + skipped
-        if processed % 10 == 0 or processed == total:
-            elapsed = time.time() - t0
-            rate = processed / elapsed
-            eta = (total - processed) / rate if rate > 0 else 0
-            print(f"  [{processed}/{total}] {rate:.1f} img/s | ETA: {eta:.0f}s")
-
-    elapsed = time.time() - t0
-    print(f"\nDone: {len(results)} evaluated, {skipped} skipped, {elapsed:.1f}s total")
-    return results
+def load_results(csv_path: str):
+    rows = []
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append({
+                "image_id": r["image_id"],
+                "orig_conf": float(r["orig_confidence"]),
+                "blur_conf": float(r["blur_confidence"]),
+                "cer": float(r["cer"]) * 100.0,
+                "wer": float(r["wer"]) * 100.0,
+            })
+    return rows
 
 
-def plot_results(results):
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    n = len(results)
+def plot_confidence_comparison(rows, out_path: str):
+    orig_conf = np.array([r["orig_conf"] for r in rows])
+    blur_conf = np.array([r["blur_conf"] for r in rows])
+    n = len(rows)
 
-    cers = [r["cer"] * 100 for r in results]
-    wers = [r["wer"] * 100 for r in results]
-    conf_origs = [r["conf_orig"] for r in results]
-    conf_blurs = [r["conf_blur"] for r in results]
-    ids = list(range(n))
-
-    avg_cer = np.mean(cers)
-    avg_wer = np.mean(wers)
-    avg_conf_orig = np.mean(conf_origs)
-    avg_conf_blur = np.mean(conf_blurs)
-    exact_match_pct = sum(1 for c in cers if c == 0) / n * 100
-
-    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    fig, (ax_hist, ax_bar) = plt.subplots(1, 2, figsize=(14, 6))
     fig.suptitle(
-        f"Tesseract OCR: Blurred vs Original (BMVC_image_data, n={n})",
+        f"Tesseract OCR Confidence: Original vs Blurred (n={n})",
         fontsize=14, fontweight="bold",
     )
 
-    # 1. CER distribution histogram
-    ax = axes[0, 0]
-    ax.hist(cers, bins=30, color="#e74c3c", edgecolor="white", alpha=0.85)
-    ax.axvline(avg_cer, color="#c0392b", linestyle="--", linewidth=2, label=f"Mean CER = {avg_cer:.1f}%")
-    ax.set_xlabel("Character Error Rate (%)")
-    ax.set_ylabel("Number of Images")
-    ax.set_title("CER Distribution")
-    ax.legend()
-    ax.grid(True, alpha=0.3, axis="y")
+    bins = np.linspace(0, 100, 31)
+    ax_hist.hist(orig_conf, bins=bins, color="#27ae60", alpha=0.65,
+                 edgecolor="white", label=f"Original (mean={orig_conf.mean():.1f})")
+    ax_hist.hist(blur_conf, bins=bins, color="#e74c3c", alpha=0.65,
+                 edgecolor="white", label=f"Blurred  (mean={blur_conf.mean():.1f})")
+    ax_hist.axvline(orig_conf.mean(), color="#1e8449", linestyle="--", linewidth=1.5)
+    ax_hist.axvline(blur_conf.mean(), color="#922b21", linestyle="--", linewidth=1.5)
+    ax_hist.set_xlabel("Tesseract confidence")
+    ax_hist.set_ylabel("Number of images")
+    ax_hist.set_title("Confidence distribution")
+    ax_hist.legend(loc="upper left")
+    ax_hist.grid(True, alpha=0.3, axis="y")
 
-    # 2. WER distribution histogram
-    ax = axes[0, 1]
-    ax.hist(wers, bins=30, color="#3498db", edgecolor="white", alpha=0.85)
-    ax.axvline(avg_wer, color="#2471a3", linestyle="--", linewidth=2, label=f"Mean WER = {avg_wer:.1f}%")
-    ax.set_xlabel("Word Error Rate (%)")
-    ax.set_ylabel("Number of Images")
-    ax.set_title("WER Distribution")
-    ax.legend()
-    ax.grid(True, alpha=0.3, axis="y")
-
-    # 3. Confidence: orig vs blur scatter
-    ax = axes[1, 0]
-    ax.scatter(conf_origs, conf_blurs, alpha=0.5, s=20, color="#8e44ad", edgecolors="none")
-    lims = [0, 100]
-    ax.plot(lims, lims, "--", color="#bdc3c7", linewidth=1, label="No degradation")
-    ax.set_xlabel("Original Confidence")
-    ax.set_ylabel("Blurred Confidence")
-    ax.set_title("Confidence: Original vs Blurred")
-    ax.set_xlim(lims)
-    ax.set_ylim(lims)
-    ax.legend(loc="upper left")
-    ax.grid(True, alpha=0.3)
-
-    # 4. Summary stats as a text panel
-    ax = axes[1, 1]
-    ax.axis("off")
-    stats_text = (
-        f"Images Evaluated:   {n}\n\n"
-        f"Avg CER:            {avg_cer:.1f}%\n"
-        f"Avg WER:            {avg_wer:.1f}%\n\n"
-        f"Avg Confidence (orig):  {avg_conf_orig:.1f}\n"
-        f"Avg Confidence (blur):  {avg_conf_blur:.1f}\n"
-        f"Confidence Drop:        {avg_conf_orig - avg_conf_blur:.1f}\n\n"
-        f"Exact OCR Matches:  {exact_match_pct:.1f}%\n"
-        f"Median CER:         {np.median(cers):.1f}%\n"
-        f"Median WER:         {np.median(wers):.1f}%\n"
-    )
-    ax.text(
-        0.1, 0.5, stats_text,
-        transform=ax.transAxes,
-        fontsize=13, fontfamily="monospace",
-        verticalalignment="center",
-        bbox=dict(boxstyle="round,pad=0.8", facecolor="#ecf0f1", edgecolor="#bdc3c7"),
-    )
-    ax.set_title("Summary Statistics")
+    labels = ["Original", "Blurred"]
+    means = [orig_conf.mean(), blur_conf.mean()]
+    medians = [np.median(orig_conf), np.median(blur_conf)]
+    x = np.arange(len(labels))
+    width = 0.35
+    ax_bar.bar(x - width / 2, means, width, color=["#27ae60", "#e74c3c"],
+               label="Mean", edgecolor="white")
+    ax_bar.bar(x + width / 2, medians, width, color=["#27ae60", "#e74c3c"],
+               alpha=0.55, label="Median", edgecolor="white", hatch="//")
+    for i, (m, md) in enumerate(zip(means, medians)):
+        ax_bar.text(i - width / 2, m + 1, f"{m:.1f}", ha="center", fontsize=10)
+        ax_bar.text(i + width / 2, md + 1, f"{md:.1f}", ha="center", fontsize=10)
+    drop = orig_conf.mean() - blur_conf.mean()
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels(labels)
+    ax_bar.set_ylim(0, 100)
+    ax_bar.set_ylabel("Confidence")
+    ax_bar.set_title(f"Mean / Median confidence  (drop = {drop:.1f})")
+    ax_bar.legend()
+    ax_bar.grid(True, alpha=0.3, axis="y")
 
     plt.tight_layout()
-    path = os.path.join(OUTPUT_DIR, "ocr_performance.png")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"Plot saved to: {path}")
+    print(f"Saved: {out_path}")
+
+
+def plot_error_rates_comparison(rows, out_path: str):
+    cer = np.array([r["cer"] for r in rows])
+    wer = np.array([r["wer"] for r in rows])
+    n = len(rows)
+
+    fig, (ax_hist, ax_bar) = plt.subplots(1, 2, figsize=(14, 6))
+    fig.suptitle(
+        f"OCR Error on Blurred Images vs Original (n={n})",
+        fontsize=14, fontweight="bold",
+    )
+
+    bins = np.linspace(0, max(cer.max(), wer.max(), 100), 31)
+    ax_hist.hist(cer, bins=bins, color="#e67e22", alpha=0.65,
+                 edgecolor="white", label=f"CER (mean={cer.mean():.1f}%)")
+    ax_hist.hist(wer, bins=bins, color="#2980b9", alpha=0.65,
+                 edgecolor="white", label=f"WER (mean={wer.mean():.1f}%)")
+    ax_hist.axvline(cer.mean(), color="#a04000", linestyle="--", linewidth=1.5)
+    ax_hist.axvline(wer.mean(), color="#1b4f72", linestyle="--", linewidth=1.5)
+    ax_hist.set_xlabel("Error rate (%)")
+    ax_hist.set_ylabel("Number of images")
+    ax_hist.set_title("CER and WER distribution")
+    ax_hist.legend(loc="upper right")
+    ax_hist.grid(True, alpha=0.3, axis="y")
+
+    labels = ["CER", "WER"]
+    means = [cer.mean(), wer.mean()]
+    medians = [np.median(cer), np.median(wer)]
+    exact = float((cer == 0).sum()) / n * 100.0
+    x = np.arange(len(labels))
+    width = 0.35
+    ax_bar.bar(x - width / 2, means, width, color=["#e67e22", "#2980b9"],
+               label="Mean", edgecolor="white")
+    ax_bar.bar(x + width / 2, medians, width, color=["#e67e22", "#2980b9"],
+               alpha=0.55, label="Median", edgecolor="white", hatch="//")
+    for i, (m, md) in enumerate(zip(means, medians)):
+        ax_bar.text(i - width / 2, m + 1, f"{m:.1f}%", ha="center", fontsize=10)
+        ax_bar.text(i + width / 2, md + 1, f"{md:.1f}%", ha="center", fontsize=10)
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels(labels)
+    ax_bar.set_ylabel("Error rate (%)")
+    ax_bar.set_title(f"Mean / Median error  (exact matches = {exact:.1f}%)")
+    ax_bar.legend()
+    ax_bar.grid(True, alpha=0.3, axis="y")
+
+    plt.tight_layout()
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved: {out_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Evaluate and visualize Tesseract OCR on BMVC_image_data blur vs orig"
+        description="Build two comparison charts from a tesseract_eval CSV"
     )
-    parser.add_argument(
-        "--blur-dir", default=os.path.join(DATA_DIR, "blur"),
-        help="Path to blurred images",
-    )
-    parser.add_argument(
-        "--orig-dir", default=os.path.join(DATA_DIR, "orig"),
-        help="Path to original images",
-    )
-    parser.add_argument("--limit", type=int, default=None, help="Limit number of images")
-    parser.add_argument("--psm", type=int, default=6, help="Tesseract PSM mode")
+    parser.add_argument("--csv", default=DEFAULT_CSV, help="Path to tesseract_eval CSV")
+    parser.add_argument("--output-dir", default=OUTPUT_DIR, help="Directory to save charts")
     args = parser.parse_args()
 
-    results = run_evaluation(args.blur_dir, args.orig_dir, args.limit, args.psm)
+    if not os.path.exists(args.csv):
+        raise SystemExit(
+            f"CSV not found: {args.csv}\n"
+            f"Run: python ocr/tesseract_eval.py --limit 250 "
+            f"--output-csv {args.csv}"
+        )
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    json_path = os.path.join(OUTPUT_DIR, "ocr_results.json")
-    with open(json_path, "w") as f:
-        json.dump(results, f, indent=2)
-    print(f"Raw results saved to: {json_path}")
+    os.makedirs(args.output_dir, exist_ok=True)
+    rows = load_results(args.csv)
+    print(f"Loaded {len(rows)} rows from {args.csv}")
 
-    plot_results(results)
+    plot_confidence_comparison(
+        rows, os.path.join(args.output_dir, "confidence_comparison.png")
+    )
+    plot_error_rates_comparison(
+        rows, os.path.join(args.output_dir, "error_rates_comparison.png")
+    )
 
 
 if __name__ == "__main__":
