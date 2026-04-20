@@ -1,2 +1,7 @@
 data/
 __pycache__
+# macOS
+.DS_Store
+
+# generated outputs
+classical/outputs/
