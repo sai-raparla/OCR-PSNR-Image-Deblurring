@@ -1,0 +1,61 @@
+{
+  "best_k": 0.01,
+  "best_mean_cer": 0.5166578561833296,
+  "n_images": 200,
+  "psm": 6,
+  "k_list": [
+    0.001,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1
+  ],
+  "per_k_summary": [
+    {
+      "k": 0.01,
+      "n": 200,
+      "mean_cer": 0.5166578561833296,
+      "median_cer": 0.5746195728046908,
+      "blank_outputs": 2
+    },
+    {
+      "k": 0.02,
+      "n": 200,
+      "mean_cer": 0.5218686015809633,
+      "median_cer": 0.585215988083416,
+      "blank_outputs": 1
+    },
+    {
+      "k": 0.005,
+      "n": 200,
+      "mean_cer": 0.5260761569260584,
+      "median_cer": 0.6024461269656377,
+      "blank_outputs": 3
+    },
+    {
+      "k": 0.05,
+      "n": 200,
+      "mean_cer": 0.5492667694247024,
+      "median_cer": 0.6214376005515974,
+      "blank_outputs": 2
+    },
+    {
+      "k": 0.1,
+      "n": 200,
+      "mean_cer": 0.5758195408715914,
+      "median_cer": 0.6548529022736449,
+      "blank_outputs": 3
+    },
+    {
+      "k": 0.001,
+      "n": 200,
+      "mean_cer": 0.5987253918438262,
+      "median_cer": 0.6490788623141565,
+      "blank_outputs": 3
+    }
+  ],
+  "blur_dir": "data/BMVC_image_data/blur",
+  "psf_dir": "data/BMVC_image_data/psf",
+  "orig_dir": "data/BMVC_image_data/orig"
+}
