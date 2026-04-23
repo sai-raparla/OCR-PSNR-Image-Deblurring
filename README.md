@@ -2,7 +2,12 @@
 
 Deblurring text images to improve OCR and PSNR accuracy using computer vision techniques.
 
-Classical Wiener deconvolution is used as the baseline restoration method. The pipeline tunes the Wiener regularization constant `k` on a training subset, then evaluates the locked-in `k` on two held-out test sets: one for image-quality metrics (PSNR) and one for OCR metrics (CER, WER).
+The repo contains two restoration pipelines evaluated on the same held-out test sets so they can be compared head-to-head:
+
+1. **Classical Wiener deconvolution** (baseline). The pipeline tunes the Wiener regularization constant `k` on a training subset, then evaluates the locked-in `k` on two held-out test sets — one for image-quality metrics (PSNR) and one for OCR metrics (CER, WER).
+2. **Restormer** (learned). A faithful PyTorch implementation of Zamir et al., CVPR 2022 ([arXiv:2111.09881](https://arxiv.org/abs/2111.09881)) — MDTA channel-attention + GDFN gated feed-forward in a 4-level encoder/decoder Transformer. Trained on the same blur/orig pairs and evaluated with the same PSNR / CER / WER protocol.
+
+A `compare.py` script overlays both methods against the blurred baseline on every metric.
 
 Dataset: [Kaggle — Text Deblurring Dataset with PSF for OCR](https://www.kaggle.com/datasets/anggadwisunarto/text-deblurring-dataset-with-psf-for-ocr).
 
@@ -17,6 +22,15 @@ OCR-Image-Deblurring/
 │   ├── eval_iq.py               evaluate locked k with PSNR on BMVC_image_quality_test_data
 │   ├── eval_ocr.py              evaluate locked k with CER/WER on BMVC_OCR_test_data
 │   └── outputs/                 generated results (CSVs, plots, restored PNGs)
+├── restormer/
+│   ├── model.py                 Restormer architecture (MDTA + GDFN + 4-level encoder/decoder)
+│   ├── dataset.py               paired blur/orig dataset with random crops + flips
+│   ├── train.py                 AdamW + cosine LR + checkpointing, on BMVC_image_data
+│   ├── inference.py             checkpoint loader + single-image inference helper
+│   ├── eval_iq.py               PSNR eval on BMVC_image_quality_test_data (mirrors classical)
+│   ├── eval_ocr.py              CER/WER eval on BMVC_OCR_test_data (mirrors classical)
+│   ├── compare.py               overlay Wiener vs Restormer vs baseline curves
+│   └── outputs/                 checkpoints, eval CSVs/plots, comparison plots
 ├── ocr/
 │   ├── tesseract_eval.py        run Tesseract on blur vs orig pairs, compute CER/WER
 │   └── visualize_ocr.py         visualize OCR results CSV
@@ -36,7 +50,11 @@ Requires Python 3.10+ and a local Tesseract binary (`brew install tesseract` on 
 pip install -r requirements.txt
 ```
 
-Python deps: `numpy`, `Pillow`, `pytesseract`, `matplotlib`.
+Python deps: `numpy`, `Pillow`, `pytesseract`, `matplotlib`, `torch`, `tqdm`.
+
+PyTorch runs on CUDA when available, falls back to Apple MPS on macOS (Apple Silicon), and to CPU otherwise. The training script auto-detects the best device; override with `--device cuda|mps|cpu`.
+
+> **NumPy / torch ABI note.** If `pip install` leaves you with `numpy>=2` but a torch wheel compiled against `numpy<2`, you'll see `RuntimeError: Numpy is not available` inside `torch.from_numpy`. The dataset and inference helpers have a fallback for this, but it's slower. To fix it permanently either `pip install "numpy<2"` or `pip install --upgrade torch`.
 
 ## Datasets
 
@@ -109,6 +127,69 @@ That chains steps 1, 2, and 3 in order and only re-runs a stage if its output is
 | `make eval` | steps 2 and 3 |
 | `make clean` | delete the `tuning/`, `eval_iq/`, `eval_ocr/` outputs |
 | `make help` | list all targets |
+
+## Restormer: learned deblurring
+
+Restormer is a Transformer-based restoration model. It replaces the hand-tuned Wiener `k` with an end-to-end mapping `blur → clean` learned on the same training pool used for tuning. The implementation in `restormer/model.py` follows the paper (MDTA channel-attention + GDFN gated feed-forward, 4-level U-Net with pixel-unshuffle/shuffle sampling and a refinement stage, trained with L1 loss).
+
+Two variants are provided:
+
+| Variant | `dim` | blocks | refinement | params | Notes |
+|---|---|---|---|---|---|
+| `small` | 24 | (2,2,2,2) | 2 | ~2.5 M | CPU/MPS-friendly default |
+| `base` | 48 | (4,6,6,8) | 4 | ~26 M | Paper config, CUDA recommended |
+
+### 1. Train Restormer
+
+```bash
+python3 restormer/train.py --variant small --epochs 30 --batch-size 8
+# or for the paper-sized model on a GPU:
+python3 restormer/train.py --variant base --epochs 200 --batch-size 16 --lr 3e-4 --amp
+```
+
+Checkpoints: `restormer/outputs/checkpoints/{last,best}.pt`. Training log: `restormer/outputs/train_log.csv`.
+
+### 2. Evaluate on the IQ test set (PSNR)
+
+```bash
+python3 restormer/eval_iq.py
+```
+
+Outputs `restormer/outputs/eval_iq/results.csv` and `psnr_vs_noise.png` with the same schema as `classical/outputs/eval_iq/`.
+
+### 3. Evaluate on the OCR test set (CER / WER)
+
+```bash
+python3 restormer/eval_ocr.py
+```
+
+Outputs `restormer/outputs/eval_ocr/results.csv`, `per_image.csv`, and the CER/WER plots.
+
+### 4. Overlay the two methods
+
+```bash
+python3 restormer/compare.py
+```
+
+Reads both sets of summary CSVs and writes combined plots + merged CSVs to `restormer/outputs/compare/`:
+
+- `psnr_compare.png` / `psnr_compare.csv`
+- `cer_compare.png`  / `cer_compare.csv`
+- `wer_compare.png`  / `wer_compare.csv`
+
+Each CSV includes `wiener_gain_vs_blur`, `restormer_gain_vs_blur`, and `restormer_vs_wiener` columns so the improvement of the learned model over Wiener is easy to read off per noise level.
+
+### One-shot pipeline
+
+```bash
+make full
+```
+
+Runs Wiener tuning + Wiener eval, then Restormer training + Restormer eval, then the comparison. Use variables to size the Restormer run:
+
+```bash
+R_VARIANT=base R_EPOCHS=200 R_BATCH=16 R_DEVICE=cuda make full
+```
 
 ## Utility scripts
 
